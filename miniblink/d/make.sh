@@ -1,8 +1,39 @@
+#!/bin/bash
 
-ldc2 -mtriple=thumb-none-linux-eabi -mcpu=cortex-m3 -c -betterC program.d
+# prerequisites:
+#   arm-none-eabi-gcc toolchain
+#   libopencm3
+#   ldc2
 
-arm-none-eabi-gcc -Os -std=c99 -ggdb3 -mthumb -mcpu=cortex-m3 -msoft-float -mfix-cortex-m3-ldrd -Wextra -Wshadow -Wimplicit-function-declaration -Wredundant-decls -Wmissing-prototypes -Wstrict-prototypes -fno-common -ffunction-sections -fdata-sections  -MD -Wall -Wundef -DSTM32F1 -I/home/wiffel/dev/hardware/stm32/libopencm3-examples/libopencm3/include -o miniblink.o -c miniblink.c
+LINK_OBJS="blink.o program.o"
 
-arm-none-eabi-gcc --static -nostartfiles -Tbluepill.ld -mthumb -mcpu=cortex-m3 -msoft-float -mfix-cortex-m3-ldrd -ggdb3 -Wl,-Map=miniblink.map -Wl,--cref -Wl,--gc-sections -L/home/wiffel/dev/hardware/stm32/libopencm3-examples/libopencm3/lib miniblink.o program.o -lopencm3_stm32f1 -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group -o miniblink.elf
+LIBOPENCM3="$HOME/dev/hardware/stm32"
+LIBOPENCM3+="/libopencm3-examples/libopencm3"
 
-arm-none-eabi-objcopy -Obinary miniblink.elf miniblink.bin
+GEN_FLAGS="-mthumb -ggdb3 -mcpu=cortex-m3"
+GEN_FLAGS+=" -msoft-float -mfix-cortex-m3-ldrd"
+
+GCC_FLAGS="-Os -std=c99 $GEN_FLAGS -Wextra -Wshadow"
+GCC_FLAGS+=" -Wimplicit-function-declaration"
+GCC_FLAGS+=" -Wredundant-decls"
+GCC_FLAGS+=" -fno-common"
+GCC_FLAGS+=" -ffunction-sections -fdata-sections"
+GCC_FLAGS+=" -MD -Wall -DSTM32F1"
+GCC_FLAGS+=" -I$LIBOPENCM3/include"
+
+LINK_FLAGS="--static -nostartfiles -Tbluepill.ld"
+LINK_FLAGS+=" $GEN_FLAGS -Wl,-Map=blink.map"
+LINK_FLAGS+=" -Wl,--cref -Wl,--gc-sections"
+LINK_FLAGS+=" -L$LIBOPENCM3/lib $LINK_OBJS"
+LINK_FLAGS+=" -lopencm3_stm32f1 -Wl,--start-group"
+LINK_FLAGS+=" -lc -lgcc -lnosys -Wl,--end-group"
+
+LDC2_FLAGS="-mtriple=thumb-none-linux-eabi"
+LDC2_FLAGS+=" -mcpu=cortex-m3 -c -betterC"
+
+
+ldc2 $LDC2_FLAGS api.d
+ldc2 $LDC2_FLAGS program.d
+arm-none-eabi-gcc $GCC_FLAGS -o blink.o -c blink.c
+arm-none-eabi-gcc $LINK_FLAGS -o blink.elf
+arm-none-eabi-objcopy -Obinary blink.elf blink.bin
