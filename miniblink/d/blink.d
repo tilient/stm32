@@ -24,7 +24,7 @@ struct State {
     setGlobal(&this);
   }
 
-  @property static State* opCall() {
+  static State* opCall() {
     return cast(State*) getGlobal();
   }
 }
