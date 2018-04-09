@@ -1,12 +1,11 @@
 import api;
 
 extern(C) int main() {
-  State state;
-  state.init();
+  State.init();
   gpioSetup();
   timerSetup();
   for (;;) {
-    if (state.on)
+    if (State().on)
       gpio_set(GPIOC, GPIO13);
     else
       gpio_clear(GPIOC, GPIO13);
@@ -20,8 +19,9 @@ extern(C) int main() {
 struct State {
   int on;
 
-  void init() {
-    setGlobal(&this);
+  static void init() {
+    import core.stdc.stdlib: calloc;
+    setGlobal(calloc(1, State.sizeof));
   }
 
   static State* opCall() {
