@@ -4,6 +4,23 @@ extern(C) int main() {
   State.init();
   gpioSetup();
   timerSetup();
+
+  immutable max = 300;
+  void step(int i) {
+    gpio_set(GPIOC, GPIO13);
+    timer_set_period(TIM2, i);
+    wfi();
+    gpio_clear(GPIOC, GPIO13);
+    timer_set_period(TIM2, max - i);
+    wfi();
+  }
+  for (;;) {
+    foreach(i; 1..max)
+      step(i);
+    foreach_reverse(i; 1..max)
+      step(i);
+  }
+
   for (;;) {
     if (State().on)
       gpio_set(GPIOC, GPIO13);
@@ -12,6 +29,13 @@ extern(C) int main() {
     wfi();
   }
   return 0;
+}
+
+extern(C) void tim2_isr() {
+  if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
+    timer_clear_flag(TIM2, TIM_SR_CC1IF);
+    State().on = State().on == 0 ? 1 : 0;
+  }
 }
 
 //--- Global State ----------------------------------
@@ -30,13 +54,6 @@ struct State {
 }
 
 //---------------------------------------------------
-
-extern(C) void tim2_isr() {
-  if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
-    timer_clear_flag(TIM2, TIM_SR_CC1IF);
-    State().on = State().on == 0 ? 1 : 0;
-  }
-}
 
 void gpioSetup() {
   rcc_periph_clock_enable(rcc_periph_clken.RCC_GPIOC);
