@@ -1,18 +1,40 @@
 import api;
 
 extern(C) int main() {
+  State state;
+  state.init();
   gpioSetup();
   timerSetup();
   for (;;) {
-    gpio_toggle(GPIOC, GPIO13);
+    if (state.on)
+      gpio_set(GPIOC, GPIO13);
+    else
+      gpio_clear(GPIOC, GPIO13);
     wfi();
   }
   return 0;
 }
 
+//--- Global State ----------------------------------
+
+struct State {
+  int on;
+
+  void init() {
+    setGlobal(&this);
+  }
+
+  @property static State* opCall() {
+    return cast(State*) getGlobal();
+  }
+}
+
+//---------------------------------------------------
+
 extern(C) void tim2_isr() {
   if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
     timer_clear_flag(TIM2, TIM_SR_CC1IF);
+    State().on = State().on == 0 ? 1 : 0;
   }
 }
 

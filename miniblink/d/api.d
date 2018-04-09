@@ -1,6 +1,11 @@
 
 extern(C) extern void wfi();
 
+extern(C) extern void setGlobal(void* ptr);
+extern(C) extern void* getGlobal();
+
+//---------------------------------------------------
+
 ref T MMIO(T)(ulong addr) {
   return *(cast(T*)addr);
 }
@@ -14,6 +19,8 @@ ref uint BBIO_PERIPH(ulong addr, ulong bit) {
   return MMIO!uint(32 * ((cast(uint)addr) & 0x0FFFFF)
                    + 0x42000000 + (4 * bit));
 }
+
+//---------------------------------------------------
 
 enum BIT0  =  1<<0;
 enum BIT1  =  1<<1;
