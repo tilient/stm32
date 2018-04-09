@@ -1,12 +1,13 @@
 import api;
 
-extern(C) void d_main() {
+extern(C) int main() {
   gpioSetup();
   timerSetup();
   for (;;) {
     gpio_toggle(GPIOC, GPIO13);
     wfi();
   }
+  return 0;
 }
 
 extern(C) void tim2_isr() {

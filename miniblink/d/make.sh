@@ -5,7 +5,7 @@
 #   libopencm3
 #   ldc2
 
-LINK_OBJS="blink.o program.o"
+LINK_OBJS="tools.o blink.o"
 
 LIBOPENCM3="$HOME/dev/hardware/stm32"
 LIBOPENCM3+="/libopencm3-examples/libopencm3"
@@ -31,7 +31,7 @@ LINK_FLAGS+=" -lc -lgcc -lnosys -Wl,--end-group"
 LDC2_FLAGS="-mtriple=thumb-none-linux-eabi"
 LDC2_FLAGS+=" -mcpu=cortex-m3 -c -betterC"
 
-ldc2 $LDC2_FLAGS program.d
-arm-none-eabi-gcc $GCC_FLAGS -o blink.o -c blink.c
+ldc2 $LDC2_FLAGS blink.d
+arm-none-eabi-gcc $GCC_FLAGS -o tools.o -c tools.c
 arm-none-eabi-gcc $LINK_FLAGS -o blink.elf
 arm-none-eabi-objcopy -Obinary blink.elf blink.bin
