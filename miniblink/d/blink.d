@@ -1,6 +1,6 @@
 import api;
 
-//--- Global State ----------------------------------
+//--- Global State ------------------------
 
 struct State {
   int on;
@@ -8,21 +8,21 @@ struct State {
   mixin GlobalState;
 }
 
-//--- main ------------------------------------------
+//--- main --------------------------------
 
-extern(C) int main() {
+extern(C) void main() {
   ledSetup();
   timerSetup();
 
-  foreach (_; 0..20) {
-    sleep(6000);
+  foreach (_; 0..30) {
+    sleep(500);
     if (State().on)
       ledOn();
     else
       ledOff();
   }
 
-  immutable max = 200;
+  immutable max = 32;
   void step(int t) {
     ledOn();
     sleep(t);
@@ -35,11 +35,9 @@ extern(C) int main() {
     foreach(t; 1..max)
       step(t);
   }
-
-  return 0;
 }
 
-//--- Led -------------------------------------------
+//--- Led ---------------------------------
 
 immutable ledPort = GPIOC;
 immutable ledPin = GPIO13;
@@ -53,13 +51,15 @@ void ledOff() {
 }
 
 void ledSetup() {
-  rcc_periph_clock_enable(rcc_periph_clken.RCC_GPIOC);
-  gpio_set_mode(ledPort, GPIO_MODE_OUTPUT_2_MHZ,
-                GPIO_CNF_OUTPUT_PUSHPULL, ledPin);
+  rcc_periph_clock_enable(
+    rcc_periph_clken.RCC_GPIOC);
+  gpio_set_mode(
+    ledPort, GPIO_MODE_OUTPUT_2_MHZ,
+    GPIO_CNF_OUTPUT_PUSHPULL, ledPin);
   gpio_clear(ledPort, ledPin);
 }
 
-//--- Timer -----------------------------------------
+//--- Timer -------------------------------
 
 void sleep(int time) {
   timer_set_period(TIM2, time);
@@ -74,9 +74,11 @@ extern(C) void tim2_isr() {
 }
 
 void timerSetup() {
-  rcc_periph_clock_enable(rcc_periph_clken.RCC_TIM2);
-  rcc_periph_reset_pulse(rcc_periph_rst.RST_TIM2);
-  timer_set_prescaler(TIM2, 128);
+  rcc_periph_clock_enable(
+    rcc_periph_clken.RCC_TIM2);
+  rcc_periph_reset_pulse(
+    rcc_periph_rst.RST_TIM2);
+  timer_set_prescaler(TIM2, 72_000);
   timer_set_period(TIM2, 100);
   timer_disable_preload(TIM2);
   timer_continuous_mode(TIM2);
@@ -85,4 +87,4 @@ void timerSetup() {
   timer_enable_counter(TIM2);
 }
 
-//---------------------------------------------------
+//-----------------------------------------
