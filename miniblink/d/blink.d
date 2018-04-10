@@ -1,7 +1,17 @@
 import api;
 
+//--- Global State ----------------------------------
+
+struct State {
+  int on;
+
+  mixin GlobalState;
+}
+
+//--- main ------------------------------------------
+
 extern(C) int main() {
-  gpioSetup();
+  ledSetup();
   timerSetup();
 
   foreach (_; 0..20) {
@@ -12,7 +22,7 @@ extern(C) int main() {
       ledOff();
   }
 
-  immutable max = 300;
+  immutable max = 200;
   void step(int t) {
     ledOn();
     sleep(t);
@@ -20,16 +30,16 @@ extern(C) int main() {
     sleep(max-t);
   }
   for (;;) {
-    foreach_reverse(i; 1..max)
-      step(i);
-    foreach(i; 1..max)
-      step(i);
+    foreach_reverse(t; 1..max)
+      step(t);
+    foreach(t; 1..max)
+      step(t);
   }
 
   return 0;
 }
 
-//---------------------------------------------------
+//--- Led -------------------------------------------
 
 immutable ledPort = GPIOC;
 immutable ledPin = GPIO13;
@@ -42,40 +52,25 @@ void ledOff() {
   gpio_clear(ledPort, ledPin);
 }
 
+void ledSetup() {
+  rcc_periph_clock_enable(rcc_periph_clken.RCC_GPIOC);
+  gpio_set_mode(ledPort, GPIO_MODE_OUTPUT_2_MHZ,
+                GPIO_CNF_OUTPUT_PUSHPULL, ledPin);
+  gpio_clear(ledPort, ledPin);
+}
+
+//--- Timer -----------------------------------------
+
 void sleep(int time) {
   timer_set_period(TIM2, time);
   wfi();
 }
-
-//---------------------------------------------------
 
 extern(C) void tim2_isr() {
   if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
     timer_clear_flag(TIM2, TIM_SR_CC1IF);
     State().on = State().on == 0 ? 1 : 0;
   }
-}
-
-//--- Global State ----------------------------------
-
-struct State {
-  int on;
-
-  static State* opCall() {
-    import core.stdc.stdlib: calloc;
-    if (!getGlobal())
-      setGlobal(calloc(1, State.sizeof));
-    return cast(State*) getGlobal();
-  }
-}
-
-//---------------------------------------------------
-
-void gpioSetup() {
-  rcc_periph_clock_enable(rcc_periph_clken.RCC_GPIOC);
-  gpio_set_mode(ledPort, GPIO_MODE_OUTPUT_2_MHZ,
-                GPIO_CNF_OUTPUT_PUSHPULL, ledPin);
-  gpio_clear(ledPort, ledPin);
 }
 
 void timerSetup() {
@@ -90,3 +85,4 @@ void timerSetup() {
   timer_enable_counter(TIM2);
 }
 
+//---------------------------------------------------
