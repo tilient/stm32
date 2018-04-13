@@ -1,4 +1,5 @@
 import api;
+import std.range;
 
 //--- Global State ------------------------
 
@@ -14,33 +15,37 @@ extern(C) void main() {
   ledSetup();
   timerSetup();
 
-  foreach (_; 0..30) {
-    sleep(500);
-    if (State().on)
-      ledOn();
-    else
-      ledOff();
-  }
-
-  immutable max = 32;
-  void step(int t) {
-    ledOn();
-    sleep(t);
-    ledOff();
-    sleep(max-t);
-  }
-  for (;;) {
-    foreach_reverse(t; 1..max)
-      step(t);
-    foreach(t; 1..max)
-      step(t);
-  }
+  foreach (_; 0..10)
+    ledBlink();
+  for (;;)
+    ledWave();
 }
 
 //--- Led ---------------------------------
 
 immutable ledPort = GPIOC;
 immutable ledPin = GPIO13;
+
+void ledBlink() {
+  if (State().on)
+    ledOn();
+  else
+    ledOff();
+  sleep(500);
+}
+
+void ledWave() {
+  static immutable r =
+    iota(1, 30, 2).array();
+  static immutable wave =
+    r.chain(r.retro).array();
+  static foreach(t; wave) {
+    ledOn();
+    sleep(t);
+    ledOff();
+    sleep(30-t);
+  }
+}
 
 void ledOn() {
   gpio_set(ledPort, ledPin);

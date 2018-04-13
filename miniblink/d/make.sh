@@ -29,9 +29,10 @@ LINK_FLAGS+=" -lopencm3_stm32f1 -Wl,--start-group"
 LINK_FLAGS+=" -lc -lgcc -lnosys -Wl,--end-group"
 
 LDC2_FLAGS="-mtriple=thumb-none-linux-eabi"
-LDC2_FLAGS+=" -mcpu=cortex-m3 -c -betterC"
+LDC2_FLAGS+=" -O -mcpu=cortex-m3 -c -betterC"
 
 ldc2 $LDC2_FLAGS blink.d
+ldc2 -output-s $LDC2_FLAGS blink.d
 arm-none-eabi-gcc $GCC_FLAGS -o tools.o -c tools.c
 arm-none-eabi-gcc $LINK_FLAGS -o blink.elf
 arm-none-eabi-objcopy -Obinary blink.elf blink.bin
