@@ -2,6 +2,7 @@
 //--- WFI -----------------------//
 
 void wfi(void) { __asm__("wfi"); }
+void nop(void) { __asm__("nop"); }
 
 //--- Global State --------------//
 

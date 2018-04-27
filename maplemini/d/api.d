@@ -1,5 +1,6 @@
 
 extern(C) extern void wfi();
+extern(C) extern void nop();
 
 //---------------------------------------------------
 
