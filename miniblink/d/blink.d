@@ -1,5 +1,4 @@
 import api;
-import std.range;
 
 //--- Global State ------------------------
 
@@ -35,10 +34,10 @@ void ledBlink() {
 }
 
 void ledWave() {
-  static immutable r =
-    iota(1, 30, 2).array();
-  static immutable wave =
-    r.chain(r.retro).array();
+  static immutable ubyte[] wave = [
+    1, 3, 5, 7, 9, 11, 13, 15, 17, 19,
+    21, 23, 25, 27, 29, 27, 25, 23, 21,
+    19, 17, 15, 13, 11, 9, 7, 5, 3];
   static foreach(t; wave) {
     ledOn();
     sleep(t);
