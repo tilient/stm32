@@ -1,14 +1,16 @@
 import api;
+import ldc.llvmasm;
 
+void wfi() {
+  __asm("wfi", "");
+}
 
 //--- main --------------------------------
 
 extern(C) void main() {
   ledSetup();
-  //timerSetup();
-
-  gpio_toggle(ledPort, ledPin);
-  foreach (_; 0 .. 5)
+  timerSetup();
+  foreach (_; 0 .. 10)
     ledBlink();
   for (;;)
     ledWave();
@@ -21,14 +23,9 @@ immutable ledPin = GPIO1;
 
 void ledBlink() {
   ledOn();
-  sleep(1);
+  sleep(20);
   ledOff();
-  sleep(1000);
-}
-
-void sleep(int time) {
-  for (int j = 0; j < 400*time; j++)
-    nop();
+  sleep(980);
 }
 
 void ledWave() {
@@ -63,22 +60,30 @@ void ledSetup() {
 
 //--- Timer -------------------------------
 
-// void sleep(int time) {
-//   timer_set_period(TIM2, time);
-//   wfi();
-// }
+void sleepB(int time) {
+  for (int j = 0; j < 400*time; j++)
+    __asm ("nop;", "");
+}
+
+void sleep(int time) {
+  timer_set_period(TIM2, time);
+  wfi();
+}
 
 extern(C) void tim2_isr() {
   if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
     timer_clear_flag(TIM2, TIM_SR_CC1IF);
-    //State().on = State().on == 0 ? 1 : 0;
-    //timer_set_period(TIM2, 3000);
+    timer_set_period(TIM2, 30_000);
   }
 }
 
 void timerSetup() {
    rcc_periph_clock_enable(
      rcc_periph_clken.RCC_TIM2);
+   timer_reset(
+     rcc_periph_rst.RST_TIM2);
+   timer_set_mode(TIM2, TIM_CR1_CKD_CK_INT,
+                  TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
    rcc_periph_reset_pulse(
      rcc_periph_rst.RST_TIM2);
    timer_set_prescaler(TIM2, 72_000);
@@ -86,8 +91,8 @@ void timerSetup() {
    timer_disable_preload(TIM2);
    timer_continuous_mode(TIM2);
    nvic_enable_irq(NVIC_TIM2_IRQ);
+   timer_enable_irq(TIM2, TIM_DIER_CC1IE);
    timer_enable_counter(TIM2);
-   // timer_enable_irq(TIM2, TIM_DIER_CC1IE);
 }
 
 //-----------------------------------------

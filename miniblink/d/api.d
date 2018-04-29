@@ -1,22 +1,4 @@
 
-extern(C) extern void wfi();
-
-//---------------------------------------------------
-
-extern(C) extern void setGlobal(void* ptr);
-extern(C) extern void* getGlobal();
-
-mixin template GlobalState() {
-  alias T = typeof(this);
-
-  static T* opCall() {
-    import core.stdc.stdlib: calloc;
-    if (!getGlobal())
-      setGlobal(calloc(1, State.sizeof));
-    return cast(T*) getGlobal();
-  }
-}
-
 //---------------------------------------------------
 
 ref T MMIO(T)(ulong addr) {

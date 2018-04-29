@@ -1,12 +1,5 @@
 import api;
 
-//--- Global State ------------------------
-
-struct State {
-  int on;
-
-  mixin GlobalState;
-}
 
 //--- main --------------------------------
 
@@ -14,7 +7,7 @@ extern(C) void main() {
   ledSetup();
   timerSetup();
 
-  foreach (_; 0..10)
+  foreach (_; 0..20)
     ledBlink();
   for (;;)
     ledWave();
@@ -25,12 +18,14 @@ extern(C) void main() {
 immutable ledPort = GPIOC;
 immutable ledPin = GPIO13;
 
+shared bool ledState = false;
+
 void ledBlink() {
-  if (State().on)
+  if (ledState)
     ledOn();
   else
     ledOff();
-  sleep(500);
+  sleep(100);
 }
 
 void ledWave() {
@@ -38,7 +33,7 @@ void ledWave() {
     1, 3, 5, 7, 9, 11, 13, 15, 17, 19,
     21, 23, 25, 27, 29, 27, 25, 23, 21,
     19, 17, 15, 13, 11, 9, 7, 5, 3];
-  static foreach(t; wave) {
+  foreach(t; wave) {
     ledOn();
     sleep(t);
     ledOff();
@@ -65,6 +60,15 @@ void ledSetup() {
 
 //--- Timer -------------------------------
 
+void wfi() {
+  version(LDC) {
+    import ldc.llvmasm;
+    __asm("wfi", "");
+  } else {
+    asm { "wfi" ::: "memory"; }
+  }
+}
+
 void sleep(int time) {
   timer_set_period(TIM2, time);
   wfi();
@@ -73,7 +77,7 @@ void sleep(int time) {
 extern(C) void tim2_isr() {
   if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
     timer_clear_flag(TIM2, TIM_SR_CC1IF);
-    State().on = State().on == 0 ? 1 : 0;
+    ledState = !ledState;
   }
 }
 
