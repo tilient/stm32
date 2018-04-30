@@ -2199,7 +2199,8 @@ uint _REG_BIT(uint base, uint bit) {
   return ((base << 5) + bit);
 }
 
-enum rcc_periph_clken {
+alias rcc_periph_clken = int;
+enum {
  RCC_DMA1 = (((0x14) << 5) + (0)),
  RCC_DMA2 = (((0x14) << 5) + (1)),
  RCC_SRAM = (((0x14) << 5) + (2)),
@@ -2259,7 +2260,8 @@ enum rcc_periph_clken {
  RCC_DAC = (((0x1C) << 5) + (29)),
  RCC_CEC = (((0x1C) << 5) + (30)),
 };
-enum rcc_periph_rst {
+alias rcc_periph_rst = int;
+enum {
  RST_OTGFS = (((0x28) << 5) + (12)),
  RST_ETHMAC = (((0x28) << 5) + (14)),
  RST_AFIO = (((0x0c) << 5) + (0)),
