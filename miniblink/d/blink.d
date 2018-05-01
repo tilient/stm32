@@ -6,7 +6,7 @@ extern(C) void main()
 {
   timerSetup();
   ledSetup();
-  ledBlink(20);
+  ledBlink();
   for (;;)
     ledWave();
 }
@@ -18,36 +18,35 @@ immutable ledPin = GPIO13;
 
 shared bool ledState = false;
 
-void ledBlink(int times)
+void ledBlink(int times = 5)
 {
-  foreach (_; 0 .. times)
-    if (ledState)
-      ledOn(100);
-    else
-      ledOff(100);
+  foreach (_; 0 .. 2 * times)
+    ledState ? ledOn(100) : ledOff(100);
 }
 
 void ledWave()
 {
   static immutable ubyte[] wave = [
     1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21,
-    23, 25, 27, 29, 27, 25, 23, 21, 19, 17,
-    15, 13, 11, 9, 7, 5, 3];
-  foreach(onTime; wave) {
-    ledOn(onTime);
-    ledOff(30 - onTime);
-  }
+    23, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3,
+    1];
+  foreach(onTime; wave)
+    foreach(_; 0 .. 3) {
+      ledOn(onTime);
+      ledOff(25 - onTime);
+    }
+  sleep(2000);
 }
 
 void ledOn(int time)
 {
-  gpio_set(ledPort, ledPin);
+  gpio_clear(ledPort, ledPin);
   sleep(time);
 }
 
 void ledOff(int time)
 {
-  gpio_clear(ledPort, ledPin);
+  gpio_set(ledPort, ledPin);
   sleep(time);
 }
 
