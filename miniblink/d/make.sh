@@ -10,6 +10,8 @@ rm blink.elf
 rm blink.map
 rm blink.o
 
+LINK_OBJS="blink.o"
+
 LIBOPENCM3="$HOME/dev/hardware/stm32"
 LIBOPENCM3+="/libopencm3-examples/libopencm3"
 
@@ -29,8 +31,6 @@ LINK_FLAGS+=" -L$LIBOPENCM3/lib $LINK_OBJS"
 LINK_FLAGS+=" -lopencm3_stm32f1 -Wl,--start-group"
 LINK_FLAGS+=" -lc -lgcc -lnosys -Wl,--end-group"
 LINK_FLAGS+=" -Wl,--no-enum-size-warning"
-
-LINK_OBJS="blink.o"
 
 arm-unknown-linux-gnueabihf-gdc $GDC_FLAGS blink.d
 arm-none-eabi-gcc $LINK_FLAGS -o blink.elf
