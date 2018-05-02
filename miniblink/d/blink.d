@@ -1,6 +1,6 @@
 import api;
 
-//--- main ---------------------------------
+//--- main -----------------------------------
 
 extern(C) void main()
 {
@@ -11,31 +11,30 @@ extern(C) void main()
     ledWave();
 }
 
-//--- Led ----------------------------------
+//--- Led ------------------------------------
 
 immutable ledPort = GPIOC;
 immutable ledPin = GPIO13;
 
 shared bool ledState = true;
 
-void ledBlink(int times = 5)
+void ledBlink(int seconds = 4)
 {
-  foreach (_; 0 .. 2 * times)
+  foreach (_; 0 .. 10 * seconds)
     ledState ? ledOn(100) : ledOff(100);
 }
 
 void ledWave()
 {
   static immutable ubyte[] wave = [
-    1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21,
-    23, 21, 19, 17, 15, 13, 11, 9, 7, 5,
-    3, 1];
+    1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23,
+    21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1];
   static foreach(onTime; wave)
     static foreach(_; 0 .. 3) {
       ledOn(onTime);
       ledOff(25 - onTime);
     }
-  sleep(2000);
+  sleep(2275);
 }
 
 void ledOn(int time)
@@ -58,22 +57,14 @@ void ledSetup()
     GPIO_CNF_OUTPUT_PUSHPULL, ledPin);
 }
 
-//--- Timer --------------------------------
-
-void wfi()
-{
-  version(LDC) {
-    import ldc.llvmasm;
-    __asm("wfi", "");
-  } else {
-    asm { "wfi" ::: "memory"; }
-  }
-}
+//--- Timer ----------------------------------
 
 void sleep(int time)
 {
+  import ldc.llvmasm;
+
   timer_set_period(TIM2, time);
-  wfi();
+  __asm("wfi", "");
 }
 
 extern(C) void tim2_isr()
@@ -96,4 +87,4 @@ void timerSetup()
   timer_enable_counter(TIM2);
 }
 
-//------------------------------------------
+//--------------------------------------------
