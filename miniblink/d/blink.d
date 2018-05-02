@@ -16,7 +16,7 @@ extern(C) void main()
 immutable ledPort = GPIOC;
 immutable ledPin = GPIO13;
 
-shared bool ledState = false;
+shared bool ledState = true;
 
 void ledBlink(int times = 5)
 {
@@ -28,10 +28,10 @@ void ledWave()
 {
   static immutable ubyte[] wave = [
     1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21,
-    23, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3,
-    1];
-  foreach(onTime; wave)
-    foreach(_; 0 .. 3) {
+    23, 21, 19, 17, 15, 13, 11, 9, 7, 5,
+    3, 1];
+  static foreach(onTime; wave)
+    static foreach(_; 0 .. 3) {
       ledOn(onTime);
       ledOff(25 - onTime);
     }
