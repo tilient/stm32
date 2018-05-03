@@ -37,4 +37,4 @@ ldc2 $LDC2_FLAGS blink.d
 arm-none-eabi-gcc $LINK_FLAGS -o blink.elf
 arm-none-eabi-objcopy -Obinary blink.elf blink.bin
 
-rm -f blink.{elf,map,o,s}
+rm -f blink.{elf,map,o}

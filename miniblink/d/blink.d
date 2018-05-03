@@ -2,55 +2,55 @@ import api;
 
 //--- main -----------------------------------
 
-extern(C) void main()
-{
+extern(C) void main() {
   timerSetup();
   ledSetup();
-  ledBlink();
+  ledBlink(3);
   for (;;)
     ledWave();
 }
 
 //--- Led ------------------------------------
 
-immutable ledPort = GPIOC;
-immutable ledPin = GPIO13;
+enum ledPort = GPIOC;
+enum ledPin = GPIO13;
 
 shared bool ledState = true;
 
-void ledBlink(int seconds = 4)
-{
-  foreach (_; 0 .. 10 * seconds)
-    ledState ? ledOn(100) : ledOff(100);
+void ledBlink(int seconds = 3) {
+  foreach (_; 0 .. 10 * seconds) {
+    ledState ? ledOn() : ledOff();
+    sleep(100);
+  }
 }
 
-void ledWave()
-{
-  static immutable ubyte[] wave = [
-    1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23,
-    21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1];
-  static foreach(onTime; wave)
-    static foreach(_; 0 .. 3) {
-      ledOn(onTime);
-      ledOff(25 - onTime);
-    }
-  sleep(2275);
-}
-
-void ledOn(int time)
-{
+void ledOn() {
   gpio_clear(ledPort, ledPin);
-  sleep(time);
 }
 
-void ledOff(int time)
-{
+void ledOff() {
   gpio_set(ledPort, ledPin);
-  sleep(time);
 }
 
-void ledSetup()
-{
+void ledWave(int seconds = 3) {
+  import std.range: iota, retro, chain, drop;
+
+  enum max  = 25;
+  enum w_up = iota(1, max);
+  enum wave = w_up.chain(w_up.retro.drop(1));
+  static foreach(onTime; wave)
+    led(onTime, max - onTime);
+  sleep(seconds * 1000 - max * (2 * max - 3));
+}
+
+void led(int onTime, int offTime) {
+  gpio_clear(ledPort, ledPin);
+  sleep(onTime);
+  gpio_set(ledPort, ledPin);
+  sleep(offTime);
+}
+
+void ledSetup() {
   rcc_periph_clock_enable(RCC_GPIOC);
   gpio_set_mode(
     ledPort, GPIO_MODE_OUTPUT_2_MHZ,
@@ -59,24 +59,21 @@ void ledSetup()
 
 //--- Timer ----------------------------------
 
-void sleep(int time)
-{
+void sleep(int time) {
   import ldc.llvmasm;
 
   timer_set_period(TIM2, time);
   __asm("wfi", "");
 }
 
-extern(C) void tim2_isr()
-{
+extern(C) void tim2_isr() {
   if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
     timer_clear_flag(TIM2, TIM_SR_CC1IF);
     ledState = !ledState;
   }
 }
 
-void timerSetup()
-{
+void timerSetup() {
   rcc_periph_clock_enable(RCC_TIM2);
   rcc_periph_reset_pulse(RST_TIM2);
   timer_set_prescaler(TIM2, 72_000);
