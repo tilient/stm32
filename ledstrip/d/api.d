@@ -1655,9 +1655,8 @@ extern(C) extern void gpio_secondary_remap(uint maps);
 // enum NULL ((void *)0)
 // #undef __need_NULL
 // enum offsetof(TYPE,MEMBER) __builtin_offsetof (TYPE, MEMBER)
-
-enum I2C1 = I2C1_BASE;
-enum I2C2 = I2C2_BASE;
+// enum I2C1 I2C1_BASE
+// enum I2C2 I2C2_BASE
 // enum I2C_CR1(i2c_base) () { return MMIO!uint((i2c_base) + 0x00)
 // enum I2C1_CR1 I2C_CR1(I2C1)
 // enum I2C2_CR1 I2C_CR1(I2C2)
@@ -1673,12 +1672,10 @@ enum I2C2 = I2C2_BASE;
 // enum I2C_DR(i2c_base) () { return MMIO!uint((i2c_base) + 0x10)
 // enum I2C1_DR I2C_DR(I2C1)
 // enum I2C2_DR I2C_DR(I2C2)
-
-ref uint I2C_SR1(uint i2c_base) {return MMIO!uint(i2c_base + 0x14);};
+// enum I2C_SR1(i2c_base) () { return MMIO!uint((i2c_base) + 0x14)
 // enum I2C1_SR1 I2C_SR1(I2C1)
 // enum I2C2_SR1 I2C_SR1(I2C2)
-ref uint I2C_SR2(uint i2c_base) {return MMIO!uint(i2c_base + 0x18);};
-
+// enum I2C_SR2(i2c_base) () { return MMIO!uint((i2c_base) + 0x18)
 // enum I2C1_SR2 I2C_SR2(I2C1)
 // enum I2C2_SR2 I2C_SR2(I2C2)
 // enum I2C_CCR(i2c_base) () { return MMIO!uint((i2c_base) + 0x1c)
@@ -1706,47 +1703,47 @@ ref uint I2C_SR2(uint i2c_base) {return MMIO!uint(i2c_base + 0x18);};
 // enum I2C_CR2_ITBUFEN (1 << 10)
 // enum I2C_CR2_ITEVTEN (1 << 9)
 // enum I2C_CR2_ITERREN (1 << 8)
-enum I2C_CR2_FREQ_2MHZ = 0x02;
-enum I2C_CR2_FREQ_3MHZ = 0x03;
-enum I2C_CR2_FREQ_4MHZ = 0x04;
-enum I2C_CR2_FREQ_5MHZ = 0x05;
-enum I2C_CR2_FREQ_6MHZ = 0x06;
-enum I2C_CR2_FREQ_7MHZ = 0x07;
-enum I2C_CR2_FREQ_8MHZ = 0x08;
-enum I2C_CR2_FREQ_9MHZ = 0x09;
-enum I2C_CR2_FREQ_10MHZ = 0x0a;
-enum I2C_CR2_FREQ_11MHZ = 0x0b;
-enum I2C_CR2_FREQ_12MHZ = 0x0c;
-enum I2C_CR2_FREQ_13MHZ = 0x0d;
-enum I2C_CR2_FREQ_14MHZ = 0x0e;
-enum I2C_CR2_FREQ_15MHZ = 0x0f;
-enum I2C_CR2_FREQ_16MHZ = 0x10;
-enum I2C_CR2_FREQ_17MHZ = 0x11;
-enum I2C_CR2_FREQ_18MHZ = 0x12;
-enum I2C_CR2_FREQ_19MHZ = 0x13;
-enum I2C_CR2_FREQ_20MHZ = 0x14;
-enum I2C_CR2_FREQ_21MHZ = 0x15;
-enum I2C_CR2_FREQ_22MHZ = 0x16;
-enum I2C_CR2_FREQ_23MHZ = 0x17;
-enum I2C_CR2_FREQ_24MHZ = 0x18;
-enum I2C_CR2_FREQ_25MHZ = 0x19;
-enum I2C_CR2_FREQ_26MHZ = 0x1a;
-enum I2C_CR2_FREQ_27MHZ = 0x1b;
-enum I2C_CR2_FREQ_28MHZ = 0x1c;
-enum I2C_CR2_FREQ_29MHZ = 0x1d;
-enum I2C_CR2_FREQ_30MHZ = 0x1e;
-enum I2C_CR2_FREQ_31MHZ = 0x1f;
-enum I2C_CR2_FREQ_32MHZ = 0x20;
-enum I2C_CR2_FREQ_33MHZ = 0x21;
-enum I2C_CR2_FREQ_34MHZ = 0x22;
-enum I2C_CR2_FREQ_35MHZ = 0x23;
-enum I2C_CR2_FREQ_36MHZ = 0x24;
-enum I2C_CR2_FREQ_37MHZ = 0x25;
-enum I2C_CR2_FREQ_38MHZ = 0x26;
-enum I2C_CR2_FREQ_39MHZ = 0x27;
-enum I2C_CR2_FREQ_40MHZ = 0x28;
-enum I2C_CR2_FREQ_41MHZ = 0x29;
-enum I2C_CR2_FREQ_42MHZ = 0x2a;
+// enum I2C_CR2_FREQ_2MHZ 0x02
+// enum I2C_CR2_FREQ_3MHZ 0x03
+// enum I2C_CR2_FREQ_4MHZ 0x04
+// enum I2C_CR2_FREQ_5MHZ 0x05
+// enum I2C_CR2_FREQ_6MHZ 0x06
+// enum I2C_CR2_FREQ_7MHZ 0x07
+// enum I2C_CR2_FREQ_8MHZ 0x08
+// enum I2C_CR2_FREQ_9MHZ 0x09
+// enum I2C_CR2_FREQ_10MHZ 0x0a
+// enum I2C_CR2_FREQ_11MHZ 0x0b
+// enum I2C_CR2_FREQ_12MHZ 0x0c
+// enum I2C_CR2_FREQ_13MHZ 0x0d
+// enum I2C_CR2_FREQ_14MHZ 0x0e
+// enum I2C_CR2_FREQ_15MHZ 0x0f
+// enum I2C_CR2_FREQ_16MHZ 0x10
+// enum I2C_CR2_FREQ_17MHZ 0x11
+// enum I2C_CR2_FREQ_18MHZ 0x12
+// enum I2C_CR2_FREQ_19MHZ 0x13
+// enum I2C_CR2_FREQ_20MHZ 0x14
+// enum I2C_CR2_FREQ_21MHZ 0x15
+// enum I2C_CR2_FREQ_22MHZ 0x16
+// enum I2C_CR2_FREQ_23MHZ 0x17
+// enum I2C_CR2_FREQ_24MHZ 0x18
+// enum I2C_CR2_FREQ_25MHZ 0x19
+// enum I2C_CR2_FREQ_26MHZ 0x1a
+// enum I2C_CR2_FREQ_27MHZ 0x1b
+// enum I2C_CR2_FREQ_28MHZ 0x1c
+// enum I2C_CR2_FREQ_29MHZ 0x1d
+// enum I2C_CR2_FREQ_30MHZ 0x1e
+// enum I2C_CR2_FREQ_31MHZ 0x1f
+// enum I2C_CR2_FREQ_32MHZ 0x20
+// enum I2C_CR2_FREQ_33MHZ 0x21
+// enum I2C_CR2_FREQ_34MHZ 0x22
+// enum I2C_CR2_FREQ_35MHZ 0x23
+// enum I2C_CR2_FREQ_36MHZ 0x24
+// enum I2C_CR2_FREQ_37MHZ 0x25
+// enum I2C_CR2_FREQ_38MHZ 0x26
+// enum I2C_CR2_FREQ_39MHZ 0x27
+// enum I2C_CR2_FREQ_40MHZ 0x28
+// enum I2C_CR2_FREQ_41MHZ 0x29
+// enum I2C_CR2_FREQ_42MHZ 0x2a
 // enum I2C_OAR1_ADDMODE (1 << 15)
 // enum I2C_OAR1_ADDMODE_7BIT 0
 // enum I2C_OAR1_ADDMODE_10BIT 1
@@ -1762,61 +1759,61 @@ enum I2C_CR2_FREQ_42MHZ = 0x2a;
 // enum I2C_SR1_RxNE (1 << 6)
 // enum I2C_SR1_STOPF (1 << 4)
 // enum I2C_SR1_ADD10 (1 << 3)
-enum I2C_SR1_BTF = 1 << 2;
-enum I2C_SR1_ADDR = 1 << 1;
-enum I2C_SR1_SB = 1;
+// enum I2C_SR1_BTF (1 << 2)
+// enum I2C_SR1_ADDR (1 << 1)
+// enum I2C_SR1_SB (1 << 0)
 // enum I2C_SR2_DUALF (1 << 7)
 // enum I2C_SR2_SMBHOST (1 << 6)
 // enum I2C_SR2_SMBDEFAULT (1 << 5)
 // enum I2C_SR2_GENCALL (1 << 4)
 // enum I2C_SR2_TRA (1 << 2)
-enum I2C_SR2_BUSY = 1 << 1;
-enum I2C_SR2_MSL = 1;
+// enum I2C_SR2_BUSY (1 << 1)
+// enum I2C_SR2_MSL (1 << 0)
 // enum I2C_CCR_FS (1 << 15)
 // enum I2C_CCR_DUTY (1 << 14)
 // enum I2C_CCR_DUTY_DIV2 0
 // enum I2C_CCR_DUTY_16_DIV_9 1
-enum I2C_WRITE = 0;
-enum I2C_READ = 1;
-enum i2c_speeds {
-  i2c_speed_sm_100k,
-  i2c_speed_fm_400k,
-  i2c_speed_fmp_1m,
-  i2c_speed_unknown
-};
+// enum I2C_WRITE 0
+// enum I2C_READ 1
+// enum i2c_speeds {
+//  i2c_speed_sm_100k,
+//  i2c_speed_fm_400k,
+//  i2c_speed_fmp_1m,
+//  i2c_speed_unknown
+// };
 //
-extern(C) extern void i2c_reset(uint i2c);
-extern(C) extern void i2c_peripheral_enable(uint i2c);
-extern(C) extern void i2c_peripheral_disable(uint i2c);
-extern(C) extern void i2c_send_start(uint i2c);
-extern(C) extern void i2c_send_stop(uint i2c);
-extern(C) extern void i2c_clear_stop(uint i2c);
-extern(C) extern void i2c_set_own_7bit_slave_address(uint i2c, ubyte slave);
-extern(C) extern void i2c_set_own_10bit_slave_address(uint i2c, ushort slave);
-extern(C) extern void i2c_set_own_7bit_slave_address_two(uint i2c, ubyte slave);
-extern(C) extern void i2c_enable_dual_addressing_mode(uint i2c);
-extern(C) extern void i2c_disable_dual_addressing_mode(uint i2c);
-extern(C) extern void i2c_set_clock_frequency(uint i2c, ubyte freq);
-extern(C) extern void i2c_send_data(uint i2c, ubyte data);
-extern(C) extern void i2c_set_fast_mode(uint i2c);
-extern(C) extern void i2c_set_standard_mode(uint i2c);
-extern(C) extern void i2c_set_ccr(uint i2c, ushort freq);
-extern(C) extern void i2c_set_trise(uint i2c, ushort trise);
-extern(C) extern void i2c_send_7bit_address(uint i2c, ubyte slave, ubyte readwrite);
-extern(C) extern ubyte i2c_get_data(uint i2c);
-extern(C) extern void i2c_enable_interrupt(uint i2c, uint interrupt);
-extern(C) extern void i2c_disable_interrupt(uint i2c, uint interrupt);
-extern(C) extern void i2c_enable_ack(uint i2c);
-extern(C) extern void i2c_disable_ack(uint i2c);
-extern(C) extern void i2c_nack_next(uint i2c);
-extern(C) extern void i2c_nack_current(uint i2c);
-extern(C) extern void i2c_set_dutycycle(uint i2c, uint dutycycle);
-extern(C) extern void i2c_enable_dma(uint i2c);
-extern(C) extern void i2c_disable_dma(uint i2c);
-extern(C) extern void i2c_set_dma_last_transfer(uint i2c);
-extern(C) extern void i2c_clear_dma_last_transfer(uint i2c);
-extern(C) extern void i2c_transfer7(uint i2c, ubyte addr, ubyte *w, size_t wn, ubyte *r, size_t rn);
-extern(C) extern void i2c_set_speed(uint i2c, i2c_speeds speed, uint clock_megahz);
+// void i2c_reset(uint i2c);
+// void i2c_peripheral_enable(uint i2c);
+// void i2c_peripheral_disable(uint i2c);
+// void i2c_send_start(uint i2c);
+// void i2c_send_stop(uint i2c);
+// void i2c_clear_stop(uint i2c);
+// void i2c_set_own_7bit_slave_address(uint i2c, ubyte slave);
+// void i2c_set_own_10bit_slave_address(uint i2c, ushort slave);
+// void i2c_set_own_7bit_slave_address_two(uint i2c, ubyte slave);
+// void i2c_enable_dual_addressing_mode(uint i2c);
+// void i2c_disable_dual_addressing_mode(uint i2c);
+// void i2c_set_clock_frequency(uint i2c, ubyte freq);
+// void i2c_send_data(uint i2c, ubyte data);
+// void i2c_set_fast_mode(uint i2c);
+// void i2c_set_standard_mode(uint i2c);
+// void i2c_set_ccr(uint i2c, ushort freq);
+// void i2c_set_trise(uint i2c, ushort trise);
+// void i2c_send_7bit_address(uint i2c, ubyte slave, ubyte readwrite);
+// ubyte i2c_get_data(uint i2c);
+// void i2c_enable_interrupt(uint i2c, uint interrupt);
+// void i2c_disable_interrupt(uint i2c, uint interrupt);
+// void i2c_enable_ack(uint i2c);
+// void i2c_disable_ack(uint i2c);
+// void i2c_nack_next(uint i2c);
+// void i2c_nack_current(uint i2c);
+// void i2c_set_dutycycle(uint i2c, uint dutycycle);
+// void i2c_enable_dma(uint i2c);
+// void i2c_disable_dma(uint i2c);
+// void i2c_set_dma_last_transfer(uint i2c);
+// void i2c_clear_dma_last_transfer(uint i2c);
+// void i2c_transfer7(uint i2c, ubyte addr, ubyte *w, size_t wn, ubyte *r, size_t rn);
+// void i2c_set_speed(uint i2c, enum i2c_speeds speed, uint clock_megahz);
 //
 // enum LIBOPENCM3_IWDG_H
 // enum LIBOPENCM3_IWDG_COMMON_ALL_H
