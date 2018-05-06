@@ -2,46 +2,25 @@ import api;
 
 //--- main -----------------------------------
 
-enum ledPort = GPIOC;
-enum ledPin = GPIO13;
-
 extern(C) void main()
 {
-  rcc_clock_setup_in_hse_8mhz_out_72mhz();
   timerSetup();
   ledSetup();
-
-  oledTest();
-  ledBlinkTest(30);
-  for (;;)
-    ledWaveTest();
-}
-
-//--- Oled -----------------------------------
-
-void oledTest() {
-  import std.range: iota, chain, retro, drop;
-
-  SSD1306!(128,64) oled;
+  OLED oled;
   oled.init();
-  enum r = iota(1, 26);
-  enum wave = r.chain(r.retro.drop(1));
-  foreach(_; 0 .. 2)
-    foreach(x; wave) {
-      oled.clearScreen();
-      oled.fillRect(
-        x, x, 127-2*x, 62-2*x,
-        Color.WHITE);
-      oled.fillRect(
-        x+5, x+5, 117-2*x, 52-2*x,
-        Color.BLACK);
-      sleep(30);
-      oled.refresh();
-    }
-  oled.turnOff();
+
+  for (;;) {
+    ledBlinkTest(3);
+    foreach (_; 0..3)
+      ledWaveTest();
+    oled.oledTest();
+  }
 }
 
 //--- Led ------------------------------------
+
+enum ledPort = GPIOC;
+enum ledPin = GPIO13;
 
 shared bool ledState = true;
 
@@ -112,85 +91,50 @@ void timerSetup() {
   timer_enable_irq(TIM2, TIM_DIER_CC1IE);
 }
 
-//--- ssd1306 --------------------------------
+//--- Oled -----------------------------------
 
-enum Color {BLACK, WHITE, INVERSE};
+alias OLED = SSD1306!(128, 64);
 
-enum SSD1306_ADDRESS               =  0x3c;
-// Commands
-enum SSD1306_SETCONTRAST           =  0x81;
-enum SSD1306_DISPLAYALLON_RESUME   =  0xA4;
-enum SSD1306_DISPLAYALLON          =  0xA5;
-enum SSD1306_NORMALDISPLAY         =  0xA6;
-enum SSD1306_INVERTDISPLAY         =  0xA7;
-enum SSD1306_DISPLAYOFF            =  0xAE;
-enum SSD1306_DISPLAYON             =  0xAF;
-enum SSD1306_SETDISPLAYOFFSET      =  0xD3;
-enum SSD1306_SETCOMPINS            =  0xDA;
-enum SSD1306_SETVCOMDETECT         =  0xDB;
-enum SSD1306_SETDISPLAYCLOCKDIV    =  0xD5;
-enum SSD1306_SETPRECHARGE          =  0xD9;
-enum SSD1306_SETMULTIPLEX          =  0xA8;
-enum SSD1306_SETLOWCOLUMN          =  0x00;
-enum SSD1306_SETHIGHCOLUMN         =  0x10;
-enum SSD1306_SETSTARTLINE          =  0x40;
-enum SSD1306_MEMORYMODE            =  0x20;
-enum SSD1306_COMSCANINC            =  0xC0;
-enum SSD1306_COMSCANDEC            =  0xC8;
-enum SSD1306_SEGREMAP              =  0xA0;
-enum SSD1306_CHARGEPUMP            =  0x8D;
-enum SSD1306_EXTERNALVCC           =  0x1;
-enum SSD1306_SWITCHCAPVCC          =  0x2;
-enum SSD1306_COLUMNADDR            =  0x21;
-enum SSD1306_PAGEADDR              =  0x22;
+void oledTest(ref OLED oled) {
+  import std.range: iota, chain, retro, drop;
 
-struct SSD1306(int WIDTH = 128,
-               int HEIGHT = 64)
+  oled.turnOn();
+  enum r = iota(1, 26);
+  enum wave = r.chain(r.retro);
+  foreach(_; 0..2)
+    foreach(x; wave) {
+      oled.clear();
+      oled.fillRect(
+        x, x, 127 - 2 * x, 62 - 2 * x,
+        Color.white);
+      oled.fillRect(
+        x + 5, x + 5, 117 - 2 * x, 52 - 2 * x,
+        Color.black);
+      sleep(30);
+      oled.refresh();
+    }
+  oled.turnOff();
+}
+
+//--- SSD1306 --------------------------------
+
+enum Color {black, white, inverse};
+
+struct SSD1306(int width = 128,
+               int height = 64)
 {
-  enum bufferLen = WIDTH * HEIGHT / 8;
+  enum bufferLen = width * height / 8;
   ubyte[bufferLen] buffer;
 
   void init() {
     i2cSetup();
-    // Initialisation sequence
-    turnOff();
-    // 1. set mux ratio
-    command!(SSD1306_SETMULTIPLEX);
-    command!(0x3F);
-    // 2. set display offset
-    command!(SSD1306_SETDISPLAYOFFSET);
-    command!(0x0);
-    // 3. set display start line
-    command!(SSD1306_SETSTARTLINE);
-    command!(SSD1306_MEMORYMODE);
-    command!(0x00);
-    // 4. set Segment re-map A0h/A1h
-    command!(SSD1306_SEGREMAP | 0x1);
-    // 5. Set COM Output Scan Direction
-    //    C0h/C8h
-    command!(SSD1306_COMSCANDEC);
-    // 6. Set COM Pins hardware configuration
-    //    DAh, 12
-    command!(SSD1306_SETCOMPINS);
-    command!(0x12);
-    // 7. Set Contrast Control 81h, 7Fh
-    command!(SSD1306_SETCONTRAST);
-    command!(0xff);
-    // 8. Disable Entire Display On A4h
-    command!(SSD1306_DISPLAYALLON_RESUME);
-    // 9. Set Normal Display A6h
-    command!(SSD1306_NORMALDISPLAY);
-    // 10. Set Osc Frequency  D5h, 80h
-    command!(SSD1306_SETDISPLAYCLOCKDIV);
-    command!(0x80);
-    // 11. Enable charge pump regulator 8Dh,
-    //     14h
-    command!(SSD1306_CHARGEPUMP );
-    command!(0x14);
-    // 12. Display On AFh
-    turnOn();
-    turnOff();
-    turnOn();
+    enum cmds = [
+      0xAE, 0xA8, 0x3F, 0x00, 0x40, 0x20,
+      0x00, 0xA1, 0xC8, 0xDA, 0x12, 0x81,
+      0xff, 0xA4, 0xA6, 0xD5, 0x80, 0x8D,
+      0x14, 0xAF];
+    static foreach(cmd; cmds)
+      command!(cmd);
   }
 
   void i2cSetup() {
@@ -209,7 +153,7 @@ struct SSD1306(int WIDTH = 128,
     i2c_reset(I2C1);
     i2c_peripheral_disable(I2C1);
     i2c_set_speed(I2C1,
-      i2c_speeds.i2c_speed_sm_100k,
+      i2c_speeds.i2c_speed_fm_400k,
       I2C_CR2_FREQ_36MHZ);
     i2c_peripheral_enable(I2C1);
 
@@ -225,62 +169,59 @@ struct SSD1306(int WIDTH = 128,
   }
 
   void command(int comm)() {
-    ubyte[2] buf =[0x00, comm];
-    i2c_transfer7(I2C1, SSD1306_ADDRESS,
+    ubyte[2] buf = [0x00, comm];
+    i2c_transfer7(I2C1, 0x3C,
                   buf.ptr, 2, null, 0);
   }
 
   void refresh() {
-    command!(SSD1306_COLUMNADDR);
-    command!(0);
-    command!(WIDTH-1);
-    command!(SSD1306_PAGEADDR);
-    command!(0);
-    command!((HEIGHT/8)-1);
-
-    ubyte[1+bufferLen] buf;
+    enum cmds = [0x21, 0x00, width - 1, 0x22,
+                 0x00, (height / 8) - 1];
+    static foreach(cmd; cmds)
+      command!(cmd);
+    ubyte[1 + bufferLen] buf;
     buf[0] = 0x40;
     buf[1 .. $] = buffer[];
-    i2c_transfer7(I2C1, SSD1306_ADDRESS,
+    i2c_transfer7(I2C1, 0x3C,
       buf.ptr, buf.length, null, 0);
   }
 
   void turnOn() {
-    command!(SSD1306_DISPLAYON);
+    command!(0xAF);
   }
 
   void turnOff() {
-    command!(SSD1306_DISPLAYOFF);
+    command!(0xAE);
   }
 
-  void clearScreen() {
+  void clear() {
     buffer[] = 0x00;
   }
 
   void drawPixel(int x, int y, int color) {
     if (x < 0) return;
     if (y < 0) return;
-    if (x >= WIDTH) return;
-    if (y >= HEIGHT) return;
+    if (x >= width) return;
+    if (y >= height) return;
 
-    auto bytePos = x + (y/8) * WIDTH;
+    auto bytePos = x + (y/8) * width;
     auto bit = 1 << (y & 7);
     switch (color)
     {
-      case Color.WHITE  :
+      case Color.white:
         buffer[bytePos] |= bit;
         break;
-      case Color.BLACK  :
+      case Color.black:
         buffer[bytePos] &= ~bit;
         break;
-      case Color.INVERSE:
+      case Color.inverse:
         buffer[bytePos] ^= bit;
         break;
       default:
     }
   }
 
-  void SWAP(ref int a, ref int b)
+  void swap(ref int a, ref int b)
   {
     int t = a;
     a = b;
@@ -296,24 +237,18 @@ struct SSD1306(int WIDTH = 128,
                 int color) {
     int steep = (abs(y1 - y0) > abs(x1 - x0));
     if (steep) {
-      SWAP(x0, y0);
-      SWAP(x1, y1);
+      swap(x0, y0);
+      swap(x1, y1);
     }
     if (x0 > x1) {
-      SWAP(x0, x1);
-      SWAP(y0, y1);
+      swap(x0, x1);
+      swap(y0, y1);
     }
 
     int dx = x1 - x0;
     int dy = abs(y1 - y0);
-
     int err = dx / 2;
-    int ystep;
-
-    if (y0 < y1)
-      ystep = 1;
-    else
-      ystep = -1;
+    int ystep = (y0 < y1) ? 1 : -1;
 
     for (; x0 <= x1; x0++) {
       if (steep)
