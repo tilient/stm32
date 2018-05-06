@@ -2,66 +2,68 @@ import api;
 
 //--- main -----------------------------------
 
+shared bool ledState = true;
+
+alias LED13 = LED!(GPIOC, GPIO13);
+alias OLED  = SSD1306!(128, 64);
+
 extern(C) void main()
 {
   timerSetup();
-  ledSetup();
-  OLED oled;
-  oled.init();
+  auto oled = OLED();
+  auto led = LED13();
 
   for (;;) {
-    ledBlinkTest(3);
+    oled.test();
+    led.test();
     foreach (_; 0..3)
-      ledWaveTest();
-    oled.oledTest();
+      led.waveTest();
   }
 }
 
-//--- Led ------------------------------------
+//--- Tests ----------------------------------
 
-enum ledPort = GPIOC;
-enum ledPin = GPIO13;
-
-shared bool ledState = true;
-
-void ledBlinkTest(int seconds = 3) {
+void test(ref LED13 led, int seconds = 3) {
   foreach (_; 0 .. 10 * seconds) {
-    ledState ? ledOn() : ledOff();
+    ledState ? led.on() : led.off();
     sleep(100);
   }
 }
 
-void ledWaveTest(int seconds = 3) {
+void waveTest(ref LED13 led, int seconds = 3) {
   import std.range: iota, retro, chain, drop;
 
   enum max  = 25;
   enum w_up = iota(1, max);
   enum wave = w_up.chain(w_up.retro.drop(1));
-  static foreach(onTime; wave)
-    led(onTime, max - onTime);
-  sleep(seconds * 1000 - max * (2 * max - 3));
+  static foreach(onTime; wave) {
+    led.on();
+    sleep(onTime);
+    led.off();
+    sleep(max - onTime);
+  }
+  sleep(seconds*1000 - max*(2*max - 3));
 }
 
-void ledOn() {
-  gpio_set(ledPort, ledPin);
-}
+void test(ref OLED oled) {
+  import std.range: iota, chain, retro, drop;
 
-void ledOff() {
-  gpio_clear(ledPort, ledPin);
-}
-
-void led(int onTime, int offTime) {
-  gpio_set(ledPort, ledPin);
-  sleep(onTime);
-  gpio_clear(ledPort, ledPin);
-  sleep(offTime);
-}
-
-void ledSetup() {
-  rcc_periph_clock_enable(RCC_GPIOC);
-  gpio_set_mode(
-    ledPort, GPIO_MODE_OUTPUT_2_MHZ,
-    GPIO_CNF_OUTPUT_PUSHPULL, ledPin);
+  oled.turnOn();
+  enum r = iota(1, 26);
+  enum wave = r.chain(r.retro);
+  foreach(_; 0..2)
+    foreach(x; wave) {
+      oled.clear();
+      oled.fillRect(
+        x, x, 127 - 2 * x, 62 - 2 * x,
+        Color.white);
+      oled.fillRect(
+        x + 5, x + 5, 117 - 2 * x, 52 - 2 * x,
+        Color.black);
+      sleep(30);
+      oled.refresh();
+    }
+  oled.turnOff();
 }
 
 //--- Timer ----------------------------------
@@ -91,29 +93,27 @@ void timerSetup() {
   timer_enable_irq(TIM2, TIM_DIER_CC1IE);
 }
 
-//--- Oled -----------------------------------
+//--- Led ------------------------------------
 
-alias OLED = SSD1306!(128, 64);
+struct LED(int port = GPIOC,
+           int pin = GPIO13)
+{
+  static LED opCall() {
+    rcc_periph_clock_enable(RCC_GPIOC);
+    gpio_set_mode(
+      port, GPIO_MODE_OUTPUT_2_MHZ,
+      GPIO_CNF_OUTPUT_PUSHPULL, pin);
+    LED led;
+    return led;
+  }
 
-void oledTest(ref OLED oled) {
-  import std.range: iota, chain, retro, drop;
+  void on() {
+    gpio_set(port, pin);
+  }
 
-  oled.turnOn();
-  enum r = iota(1, 26);
-  enum wave = r.chain(r.retro);
-  foreach(_; 0..2)
-    foreach(x; wave) {
-      oled.clear();
-      oled.fillRect(
-        x, x, 127 - 2 * x, 62 - 2 * x,
-        Color.white);
-      oled.fillRect(
-        x + 5, x + 5, 117 - 2 * x, 52 - 2 * x,
-        Color.black);
-      sleep(30);
-      oled.refresh();
-    }
-  oled.turnOff();
+  void off() {
+    gpio_clear(port, pin);
+  }
 }
 
 //--- SSD1306 --------------------------------
@@ -126,18 +126,21 @@ struct SSD1306(int width = 128,
   enum bufferLen = width * height / 8;
   ubyte[bufferLen] buffer;
 
-  void init() {
+  static SSD1306 opCall() {
     i2cSetup();
+    reset();
+    SSD1306 oled;
     enum cmds = [
       0xAE, 0xA8, 0x3F, 0x00, 0x40, 0x20,
       0x00, 0xA1, 0xC8, 0xDA, 0x12, 0x81,
       0xff, 0xA4, 0xA6, 0xD5, 0x80, 0x8D,
       0x14, 0xAF];
     static foreach(cmd; cmds)
-      command!(cmd);
+      oled.command(cmd);
+    return oled;
   }
 
-  void i2cSetup() {
+  static void i2cSetup() {
     rcc_periph_clock_enable(RCC_GPIOB);
     rcc_periph_clock_enable(RCC_I2C1);
 
@@ -160,7 +163,9 @@ struct SSD1306(int width = 128,
     gpio_set_mode(
       GPIOB, GPIO_MODE_OUTPUT_2_MHZ,
       GPIO_CNF_OUTPUT_PUSHPULL, GPIO5);
+  }
 
+  static void reset() {
     gpio_set(GPIOB, GPIO5);
     sleep(1);
     gpio_clear(GPIOB, GPIO5);
@@ -168,30 +173,31 @@ struct SSD1306(int width = 128,
     gpio_set(GPIOB, GPIO5);
   }
 
-  void command(int comm)() {
-    ubyte[2] buf = [0x00, comm];
+  void command(ubyte comm) {
+    ubyte[2] buf = [0x00u, comm];
     i2c_transfer7(I2C1, 0x3C,
                   buf.ptr, 2, null, 0);
   }
 
   void refresh() {
-    enum cmds = [0x21, 0x00, width - 1, 0x22,
-                 0x00, (height / 8) - 1];
-    static foreach(cmd; cmds)
-      command!(cmd);
+    enum cmds = [
+      0x21, 0x00, width - 1,
+      0x22, 0x00, (height / 8) - 1];
+    foreach(ubyte cmd; cmds)
+      command(cmd);
     ubyte[1 + bufferLen] buf;
-    buf[0] = 0x40;
+    buf[0] = 0x40u;
     buf[1 .. $] = buffer[];
     i2c_transfer7(I2C1, 0x3C,
       buf.ptr, buf.length, null, 0);
   }
 
   void turnOn() {
-    command!(0xAF);
+    command(0xAF);
   }
 
   void turnOff() {
-    command!(0xAE);
+    command(0xAE);
   }
 
   void clear() {
@@ -221,8 +227,7 @@ struct SSD1306(int width = 128,
     }
   }
 
-  void swap(ref int a, ref int b)
-  {
+  void swap(ref int a, ref int b) {
     int t = a;
     a = b;
     b = t;
@@ -232,9 +237,9 @@ struct SSD1306(int width = 128,
     return (v < 0) ? -v : v;
   }
 
-  void drawLine(int x0, int y0,
-                int x1, int y1,
-                int color) {
+  void drawLine(int x0, int y0, int x1, int y1,
+                int color)
+  {
     int steep = (abs(y1 - y0) > abs(x1 - x0));
     if (steep) {
       swap(x0, y0);
@@ -263,17 +268,17 @@ struct SSD1306(int width = 128,
     }
   }
 
-  void fillRect(int x, int y,
-                int w, int h,
-                int color) {
+  void fillRect(int x, int y, int w, int h,
+                int color)
+  {
     foreach(yy; y .. y+h)
       foreach(xx; x .. x+w)
         drawPixel(xx, yy, color);
   }
 
-  void drawRect(int x, int y,
-                int w, int h,
-                int color) {
+  void drawRect(int x, int y, int w, int h,
+                int color)
+  {
     if (w == 0)
       return;
     if (h == 0)
@@ -290,7 +295,6 @@ struct SSD1306(int width = 128,
       drawLine(x, y1, x1, y1, color);
     }
   }
-
 }
 
 //--------------------------------------------
