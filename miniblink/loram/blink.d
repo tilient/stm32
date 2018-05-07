@@ -1,6 +1,6 @@
 import api;
 
-//--- main -----------------------------------
+//--- main --------------------------------------------
 
 shared bool ledState = true;
 
@@ -18,9 +18,9 @@ extern(C) void main()
   }
 }
 
-//--- Tests ----------------------------------
+//--- Tests -------------------------------------------
 
-void test(ref IO led, int seconds = 2)
+void test(ref IO led, int seconds = 1)
 {
   foreach (_; 0 .. 10 * seconds) {
     ledState ? led.on() : led.off();
@@ -42,7 +42,7 @@ void waveTest(ref IO led, int seconds = 2)
       led.off();
       sleepMs(max - onTime);
     }
-    sleepMs(seconds*1000 - max*(2*max - 3));
+    sleepMs(seconds * 1000 - max * (2 * max - 3));
   }
 }
 
@@ -56,19 +56,17 @@ void test(ref OLED oled)
   foreach(_; 0..2)
     foreach(x; wave) {
       oled.clear();
-      oled.fillRect(
-        x, x, 127 - 2*x, 62 - 2*x,
-        Color.white);
-      oled.fillRect(
-        x + 5, x + 5, 117 - 2*x, 52 - 2*x,
-        Color.black);
+      oled.fillRect(x, x, 127 - 2*x, 62 - 2*x,
+                    Color.white);
+      oled.fillRect(x + 5, x + 5, 117 - 2*x, 52 - 2*x,
+                    Color.black);
       sleepMs(30);
       oled.refresh();
     }
   oled.turnOff();
 }
 
-//--- Timer ----------------------------------
+//--- Timer -------------------------------------------
 
 void sleepMs(int milliseconds)
 {
@@ -98,7 +96,7 @@ void timerSetup()
   timer_enable_irq(TIM2, TIM_DIER_CC1IE);
 }
 
-//--- IO Port --------------------------------
+//--- IO Port -----------------------------------------
 
 struct IO
 {
@@ -110,9 +108,8 @@ struct IO
     this.port = port;
     this.pin = pin;
     rcc_periph_clock_enable(clk);
-    gpio_set_mode(
-      port, GPIO_MODE_OUTPUT_2_MHZ,
-      GPIO_CNF_OUTPUT_PUSHPULL, pin);
+    gpio_set_mode(port, GPIO_MODE_OUTPUT_2_MHZ,
+                  GPIO_CNF_OUTPUT_PUSHPULL, pin);
   }
 
   void on()
@@ -126,7 +123,7 @@ struct IO
   }
 }
 
-//--- SSD1306 --------------------------------
+//--- SSD1306 -----------------------------------------
 
 struct SSD1306(int width, int height)
 {
@@ -138,14 +135,12 @@ struct SSD1306(int width, int height)
   this(uint rstPort, ushort rstPin, int clk)
   {
     this.i2cSetup();
-    this.gfx = Gfx!(width, height)();
     this.resetIO = IO(rstPort, rstPin, clk);
     this.reset();
     this.command(
-      0xAE, 0xA8, 0x3F, 0x00, 0x40, 0x20,
-      0x00, 0xA1, 0xC8, 0xDA, 0x12, 0x81,
-      0xff, 0xA4, 0xA6, 0xD5, 0x80, 0x8D,
-      0x14, 0xAF);
+      0xAE, 0xA8, 0x3F, 0x00, 0x40, 0x20, 0x00, 0xA1,
+      0xC8, 0xDA, 0x12, 0x81, 0xff, 0xA4, 0xA6, 0xD5,
+      0x80, 0x8D, 0x14, 0xAF);
   }
 
   void i2cSetup()
@@ -153,20 +148,15 @@ struct SSD1306(int width, int height)
     rcc_periph_clock_enable(RCC_GPIOB);
     rcc_periph_clock_enable(RCC_I2C1);
 
-    gpio_set_mode(GPIOB,
-      GPIO_MODE_OUTPUT_50_MHZ,
-      GPIO_CNF_OUTPUT_ALTFN_OPENDRAIN,
-      GPIO_I2C1_SDA); //PB7
-    gpio_set_mode(GPIOB,
-      GPIO_MODE_OUTPUT_50_MHZ,
-      GPIO_CNF_OUTPUT_ALTFN_OPENDRAIN,
-      GPIO_I2C1_SCL); //PB6
+    gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
+      GPIO_CNF_OUTPUT_ALTFN_OPENDRAIN, GPIO_I2C1_SDA);
+    gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
+      GPIO_CNF_OUTPUT_ALTFN_OPENDRAIN, GPIO_I2C1_SCL);
 
     i2c_reset(I2C1);
     i2c_peripheral_disable(I2C1);
-    i2c_set_speed(I2C1,
-      i2c_speeds.i2c_speed_fm_400k,
-      I2C_CR2_FREQ_36MHZ);
+    i2c_set_speed(I2C1, i2c_speeds.i2c_speed_fm_400k,
+                  I2C_CR2_FREQ_36MHZ);
     i2c_peripheral_enable(I2C1);
   }
 
@@ -181,24 +171,20 @@ struct SSD1306(int width, int height)
 
   void command(ubyte[] comm ...)
   {
+    ubyte[2] buf = [0x00u, 0x00u];
     foreach(c; comm) {
-      ubyte[2] buf = [0x00u, c];
-      i2c_transfer7(I2C1, 0x3C,
-                    buf.ptr, 2, null, 0);
+      buf[1] = c;
+      i2c_transfer7(I2C1, 0x3C, buf.ptr, 2, null, 0);
     }
   }
 
   void refresh()
   {
-    ubyte[1 + gfx.buffer.length] buf;
-    buf[0] = 0x40u;
-    buf[1 .. $] = gfx.buffer[];
-    command(0x21, 0x00,
-            cast(ubyte)(width - 1),
-            0x22, 0x00,
-            cast(ubyte)((height / 8) - 1));
-    i2c_transfer7(I2C1, 0x3C, buf.ptr,
-      1 + gfx.buffer.length, null, 0);
+    command(0x21, 0x00, cast(ubyte)(width - 1),
+            0x22, 0x00, cast(ubyte)((height / 8) - 1));
+    gfx.buffer[0] = 0x40;
+    i2c_transfer7(I2C1, 0x3C, gfx.buffer.ptr,
+                  gfx.buffer.length, null, 0);
   }
 
   void turnOn()
@@ -212,13 +198,13 @@ struct SSD1306(int width, int height)
   }
 }
 
-//--- Gfx ------------------------------------
+//--- Gfx ---------------------------------------------
 
 enum Color {black, white, inverse};
 
 struct Gfx(int width, int height)
 {
-  ubyte[width * height / 8] buffer;
+  ubyte[1 + width * height / 8] buffer;
 
   void clear()
   {
@@ -232,7 +218,7 @@ struct Gfx(int width, int height)
     if (x >= width) return;
     if (y >= height) return;
 
-    auto b = &buffer[x + (y/8) * width];
+    auto b = &buffer[1 + x + (y/8) * width];
     auto bit = 1 << (y & 7);
     switch (color) {
       case Color.white  : *b |=  bit; break;
@@ -245,17 +231,17 @@ struct Gfx(int width, int height)
   void fillRect(int x, int y, int w, int h,
                 int color)
   {
-    foreach(yy; y .. y+h)
-      foreach(xx; x .. x+w)
+    foreach(yy; y .. y + h)
+      foreach(xx; x .. x + w)
         drawPixel(xx, yy, color);
   }
 }
 
-//--- Tools ----------------------------------
+//--- Tools -------------------------------------------
 
 int abs(int v)
 {
   return (v < 0) ? -v : v;
 }
 
-//--------------------------------------------
+//-----------------------------------------------------
