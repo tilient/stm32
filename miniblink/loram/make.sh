@@ -11,7 +11,7 @@
 #   https://github.com/ldc-developers/ldc
 ##################################################
 
-LINK_OBJS="blink.o api.o"
+LINK_OBJS="main.o api.o"
 
 LIBOPENCM3="$HOME/dev/hardware/stm32"
 LIBOPENCM3+="/libopencm3-examples/libopencm3/lib"
@@ -19,7 +19,7 @@ LIBOPENCM3+="/libopencm3-examples/libopencm3/lib"
 LINK_FLAGS="  --static"
 LINK_FLAGS+=" -nostartfiles -Tloram.ld"
 LINK_FLAGS+=" -mcpu=cortex-m3 -mtune=cortex-m3"
-LINK_FLAGS+=" -Wl,-Map=blink.map"
+LINK_FLAGS+=" -Wl,-Map=main.map"
 LINK_FLAGS+=" -Wl,--cref -Wl,--gc-sections"
 LINK_FLAGS+=" -L$LIBOPENCM3 $LINK_OBJS"
 LINK_FLAGS+=" -lopencm3_stm32f1 -Wl,--start-group"
@@ -31,13 +31,13 @@ LDC2_FLAGS+=" -relocation-model=static"
 LDC2_FLAGS+=" -O -mcpu=cortex-m3"
 LDC2_FLAGS+=" -release -c -betterC"
 
-rm -f blink.{elf,map,o,s,bin}
+rm -f main.{elf,map,o,s,bin}
 rm -f api.{elf,map,o,s,bin}
 
-ldc2 $LDC2_FLAGS blink.d
+ldc2 $LDC2_FLAGS main.d
 ldc2 $LDC2_FLAGS api.d
-arm-none-eabi-gcc $LINK_FLAGS -o blink.elf
-arm-none-eabi-objcopy -Obinary blink.elf blink.bin
+arm-none-eabi-gcc $LINK_FLAGS -o main.elf
+arm-none-eabi-objcopy -Obinary main.elf main.bin
 
-rm -f blink.{elf,map,o}
+rm -f main.{elf,map,o}
 rm -f api.{elf,map,o,s,bin}
