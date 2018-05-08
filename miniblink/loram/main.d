@@ -20,6 +20,30 @@ extern(C) void main()
 
 //--- Tests -------------------------------------------
 
+void test(ref SSD1306 oled)
+{
+  import std.range: iota, chain, retro;
+
+  oled.turnOn();
+  auto steps = iota(1, 26);
+  auto wave = steps.chain(steps.retro);
+  foreach(_; 0..2)
+    foreach(i; wave) {
+      auto x = i;
+      auto y = i;
+      auto dx = 127 - 2 * i;
+      auto dy = 63 - 2 * i;
+      with (oled) {
+        clear();
+        fillRect(x, y, dx, dy, Color.white);
+        fillRect(x+5, y+5, dx-10, dy-10, Color.black);
+        refresh();
+      }
+      sleepMs(30);
+    }
+  oled.turnOff();
+}
+
 void test(ref IO led, int seconds = 1)
 {
   foreach (_; 0 .. 10 * seconds) {
@@ -32,9 +56,9 @@ void waveTest(ref IO led, int seconds = 2)
 {
   import std.range: iota, retro, chain, drop;
 
-  auto max  = 25;
-  auto w_up = iota(1, max);
-  auto wave = w_up.chain(w_up.retro.drop(1));
+  auto max   = 25;
+  auto steps = iota(1, max);
+  auto wave  = steps.chain(steps.retro.drop(1));
   foreach (_; 0 .. 3) {
     foreach(onTime; wave) {
       led.on();
@@ -46,26 +70,6 @@ void waveTest(ref IO led, int seconds = 2)
   }
 }
 
-void test(ref SSD1306 oled)
-{
-  import std.range: iota, chain, retro;
-
-  oled.turnOn();
-  auto r = iota(1, 26);
-  auto wave = r.chain(r.retro);
-  foreach(_; 0..2)
-    foreach(x; wave) {
-      oled.clear();
-      oled.fillRect(x, x, 127 - 2*x, 62 - 2*x,
-                    Color.white);
-      oled.fillRect(x + 5, x + 5, 117 - 2*x, 52 - 2*x,
-                    Color.black);
-      sleepMs(30);
-      oled.refresh();
-    }
-  oled.turnOff();
-}
-
 //--- Timer -------------------------------------------
 
 void sleepMs(int milliseconds)
@@ -73,7 +77,6 @@ void sleepMs(int milliseconds)
   import ldc.llvmasm;
 
   timer_set_period(TIM2, milliseconds);
-  timer_set_prescaler(TIM2, 48_000);
   timer_enable_counter(TIM2);
   __asm("wfi", "");
 }
@@ -91,6 +94,7 @@ void timerSetup()
   rcc_periph_clock_enable(RCC_TIM2);
   rcc_periph_reset_pulse(RST_TIM2);
   timer_disable_preload(TIM2);
+  timer_set_prescaler(TIM2, 48_000);
   timer_one_shot_mode(TIM2);
   nvic_enable_irq(NVIC_TIM2_IRQ);
   timer_enable_irq(TIM2, TIM_DIER_CC1IE);
@@ -258,9 +262,5 @@ struct Gfx
         drawPixel(xx, yy, color);
   }
 }
-
-//--- Tools -------------------------------------------
-
-auto abs = (int v) => (v < 0) ? -v : v;
 
 //-----------------------------------------------------
