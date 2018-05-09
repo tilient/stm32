@@ -27,10 +27,10 @@ void test(ref SSD1306 oled)
 
   void drawing(int i)
   {
-    auto x = i;
-    auto y = i;
-    auto dx = 127 - 2 * i;
-    auto dy = 63 - 2 * i;
+    immutable x = i;
+    immutable y = i;
+    immutable dx = 127 - 2 * i;
+    immutable dy = 63 - 2 * i;
     oled.clear();
     oled.fillRect(x, y, dx, dy, Color.white);
     oled.fillRect(x + 5, y + 5, dx - 10, dy - 10,
@@ -40,7 +40,7 @@ void test(ref SSD1306 oled)
   }
 
   oled.turnOn();
-  auto steps = iota(1, 26);
+  immutable steps = iota(1, 26);
   foreach(i; steps.chain(steps.retro).cycle.take(2))
     drawing(i);
   oled.turnOff();
@@ -59,7 +59,10 @@ void waveTest(ref IO led, int seconds = 2)
 {
   import std.range: iota, retro, chain, drop;
 
-  auto max   = 25;
+  immutable max   = 25;
+  void onOff(int onTime)
+  {
+  }
   auto steps = iota(1, max);
   auto wave  = steps.chain(steps.retro.drop(1));
   foreach (_; 0 .. 3)
@@ -252,7 +255,7 @@ struct Gfx
     if (y >= height) return;
 
     auto b = &buffer[1 + x + (y / 8) * width];
-    auto bit = 1 << (y & 7);
+    immutable bit = 1 << (y & 7);
     switch (color)
     {
       case Color.white   : *b |=  bit; break;
