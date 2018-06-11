@@ -2,8 +2,6 @@ import api;
 
 //--- main --------------------------------------------
 
-shared bool ledState = true;
-
 extern(C) void main()
 {
   timerSetup();
@@ -26,14 +24,14 @@ void test(ref SSD1306 oled)
 
   void drawing(int i)
   {
-    immutable x = i;
-    immutable y = i;
+    alias x = i;
+    alias y = i;
     immutable dx = 127 - 2 * i;
     immutable dy = 63 - 2 * i;
     oled.clear();
     oled.fillRect(x, y, dx, dy, Color.white);
     oled.fillRect(x + 5, y + 5, dx - 10, dy - 10,
-               Color.black);
+                  Color.black);
     oled.refresh();
     sleepMs(30);
   }
@@ -44,6 +42,8 @@ void test(ref SSD1306 oled)
     drawing(i);
   oled.turnOff();
 }
+
+shared bool ledState = true;
 
 void test(ref IO led, int seconds = 1)
 {
