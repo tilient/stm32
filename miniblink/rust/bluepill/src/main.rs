@@ -5,58 +5,103 @@
 #![feature(panic_implementation)]
 #![feature(core_intrinsics)]
 
+use core::ptr;
+use core::panic::PanicInfo;
+  use core::intrinsics;
+
 /*
 cargo build --release
 arm-none-eabi-objcopy -Obinary \
   target/thumbv7em-none-eabihf/release/blue-pill blink.bin
 */
 
+//**********************************************************
+
+#[no_mangle]
+pub extern "C" fn main()
+{
+  init_gpio();
+  loop {
+    set_port(13);
+    sleep(100);
+    clear_port(13);
+    sleep(900);
+  }
+}
+
+//**********************************************************
+//** GPIO Ports
+//**********************************************************
 
 // LED0 = PC13;
 
-pub const RCC_APB2ENR: *mut u32 = 0x4002_1018 as *mut u32;
-pub const RCC_APB2ENR_IOPCEN: u32 = 1 << 4;
-pub const GPIOC_CRH: *mut u32 = 0x4001_1004 as *mut u32;
-pub const GPIOC_BSRR: *mut u32 = 0x4001_1010 as *mut u32;
+const RCC_APB2ENR: *mut u32 = 0x4002_1018 as *mut u32;
+const RCC_APB2ENR_IOPCEN: u32 = 1 << 4;
+const GPIOC_CRH: *mut u32 = 0x4001_1004 as *mut u32;
+const GPIOC_BSRR: *mut u32 = 0x4001_1010 as *mut u32;
 
-#[no_mangle]
-pub extern "C" fn main() -> !
+fn init_gpio()
 {
-  use core::ptr;
-
   unsafe {
     // Enable GPIOC
     ptr::write_volatile(RCC_APB2ENR,
       ptr::read_volatile(RCC_APB2ENR) | RCC_APB2ENR_IOPCEN);
     // Set PC13 Mode = Output
     ptr::write_volatile(GPIOC_CRH, 0x44544444);
-    loop {
-      // Set PC13
-      ptr::write_volatile(GPIOC_BSRR, 1 << (13 + 16));
-      // Delay approx 1/40 second
-      for _ in 0 .. 100_000 { asm!("nop") }
-      // Reset Set PC13
-      ptr::write_volatile(GPIOC_BSRR, 1 << 13);
-      // Delay approx 1/4 second
-      for _ in 0 .. 1_000_000 { asm!("nop") }
+  }
+}
+
+fn set_port(p: u8)
+{
+  unsafe { ptr::write_volatile(GPIOC_BSRR, 1 << (p + 16)); }
+}
+
+fn clear_port(p: u8)
+{
+  unsafe { ptr::write_volatile(GPIOC_BSRR, 1 << p); }
+}
+
+//**********************************************************
+//** SysTick Timer
+//**********************************************************
+
+const SYSTICK_CSR: *mut u32 = 0xE000_E010 as *mut u32;
+const SYSTICK_RVR: *mut u32 = 0xE000_E014 as *mut u32;
+const SYSTICK_VAL: *mut u32 = 0xE000_E018 as *mut u32;
+//const SYSTICK_CAL: *mut u32 = 0xE000_E01C as *mut u32;
+const TICK_FLAG: u32 = 0x10_000;
+
+#[doc(hidden)]
+#[export_name = "_systick"]
+pub unsafe extern "C" fn systick() { }
+
+fn sleep(ms: u32)
+{
+  unsafe {
+    ptr::write_volatile(SYSTICK_CSR, 0x04);
+    ptr::write_volatile(SYSTICK_RVR, ms * 8_000);
+    ptr::write_volatile(SYSTICK_VAL, 0);
+    ptr::write_volatile(SYSTICK_CSR, 0x07);
+    while 0 == (ptr::read_volatile(SYSTICK_CSR) & TICK_FLAG)
+    {
+      asm!("wfi");
     }
   }
 }
 
+//**********************************************************
+//** Interrupt Handlers
+//**********************************************************
+
 #[doc(hidden)]
 #[export_name = "_default_exception_handler"]
-pub unsafe extern "C" fn default_handler_entry_point() -> ! {
-    loop {}
-}
+pub unsafe extern "C" fn default_handler_entry_point() {}
 
 #[doc(hidden)]
 #[export_name = "_reset"]
-pub unsafe extern "C" fn reset() -> ! {
-    extern "C" {
-        fn main();
-    }
-    main();
-    loop {}
+pub unsafe extern "C" fn reset()
+{
+  main();
 }
 
 pub type Handler = unsafe extern "C" fn();
@@ -74,11 +119,11 @@ pub static EXCEPTION_HANDLERS: [Option<Handler>; 15] = [
   None,
   None,
   None,
-  Some(_svcall),      // System service call via SWI instruction
-  Some(_debug),       // Debug
+  Some(_svcall),  // System service call via SWI instruction
+  Some(_debug),   // Debug
   None,
-  Some(_pendsv),      // Pendable request for system service
-  Some(_systick),     // System tick timer
+  Some(_pendsv),  // Pendable request for system service
+  Some(_systick), // System tick timer
 ];
 
 extern "C" {
@@ -90,20 +135,21 @@ extern "C" {
                        // access fault.
   pub fn _usage_fault(); // Undefined instruction or
                          //illegal state.
-  pub fn _svcall();   // System service call via SWI instruction
+  pub fn _svcall();   // System service call via
+                      // SWI instruction
   pub fn _debug();    // Debug
   pub fn _pendsv();   // Pendable request for system service
   pub fn _systick();  // System tick timer
 }
 
-
-use core::panic::PanicInfo;
+//**********************************************************
+//** Panic
+//**********************************************************
 
 #[panic_implementation]
 fn panic(_info: &PanicInfo) -> !
 {
-  use core::intrinsics;
-
   unsafe { intrinsics::abort() }
 }
 
+//**********************************************************
