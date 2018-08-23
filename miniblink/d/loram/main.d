@@ -11,8 +11,8 @@ extern(C) void main()
   for (;;)
   {
     oled.test();
-    led.test();
     led.waveTest();
+    led.test();
   }
 }
 
@@ -37,8 +37,9 @@ void test(ref SSD1306 oled)
   }
 
   oled.turnOn();
-  immutable steps = iota(1, 26);
-  foreach(i; steps.chain(steps.retro).cycle.take(2))
+  immutable steps = [1,3,5,7,9,11,13,15,17,19,21,23,25,
+                     23,21,19,17,15,13,11,9,7,5,3];
+  foreach(i; steps)
     drawing(i);
   oled.turnOff();
 }

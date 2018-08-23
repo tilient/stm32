@@ -39,5 +39,7 @@ ldc2 $LDC2_FLAGS api.d
 arm-none-eabi-gcc $LINK_FLAGS -o main.elf
 arm-none-eabi-objcopy -Obinary main.elf main.bin
 
-rm -f main.{elf,map,o}
-rm -f api.{elf,map,o,s,bin}
+#rm -f main.{elf,map,o}
+#rm -f api.{elf,map,o,s,bin}
+
+# dfu-util.exe -v -D main.bin
