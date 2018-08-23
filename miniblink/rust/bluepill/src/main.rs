@@ -30,6 +30,40 @@ pub extern "C" fn main()
 }
 
 //**********************************************************
+//** SysTick Timer
+//**********************************************************
+
+const SYSTICK_CSR: *mut u32 = 0xE000_E010 as *mut u32;
+const SYSTICK_RVR: *mut u32 = 0xE000_E014 as *mut u32;
+const SYSTICK_VAL: *mut u32 = 0xE000_E018 as *mut u32;
+const TICK_FLAG: u32 = 0x10_000;
+
+#[doc(hidden)]
+#[export_name = "_systick"]
+pub unsafe extern "C" fn systick() { }
+
+fn sleep(millis: u32)
+{
+  let mut ms = millis;
+  while ms > 2000
+  {
+    sleep(2000);
+    ms -= 2000;
+  }
+  unsafe {
+    ptr::write_volatile(SYSTICK_CSR, 4);
+    ptr::write_volatile(SYSTICK_RVR, ms * 8_000);
+    ptr::write_volatile(SYSTICK_VAL, 0);
+    ptr::write_volatile(SYSTICK_CSR, 7);
+    while 0 == (ptr::read_volatile(SYSTICK_CSR) & TICK_FLAG)
+    {
+      asm!("wfi");
+    }
+    ptr::write_volatile(SYSTICK_CSR, 4);
+  }
+}
+
+//**********************************************************
 //** GPIO Ports
 //**********************************************************
 
@@ -59,34 +93,6 @@ fn set_port(p: u8)
 fn clear_port(p: u8)
 {
   unsafe { ptr::write_volatile(GPIOC_BSRR, 1 << p); }
-}
-
-//**********************************************************
-//** SysTick Timer
-//**********************************************************
-
-const SYSTICK_CSR: *mut u32 = 0xE000_E010 as *mut u32;
-const SYSTICK_RVR: *mut u32 = 0xE000_E014 as *mut u32;
-const SYSTICK_VAL: *mut u32 = 0xE000_E018 as *mut u32;
-//const SYSTICK_CAL: *mut u32 = 0xE000_E01C as *mut u32;
-const TICK_FLAG: u32 = 0x10_000;
-
-#[doc(hidden)]
-#[export_name = "_systick"]
-pub unsafe extern "C" fn systick() { }
-
-fn sleep(ms: u32)
-{
-  unsafe {
-    ptr::write_volatile(SYSTICK_CSR, 0x04);
-    ptr::write_volatile(SYSTICK_RVR, ms * 8_000);
-    ptr::write_volatile(SYSTICK_VAL, 0);
-    ptr::write_volatile(SYSTICK_CSR, 0x07);
-    while 0 == (ptr::read_volatile(SYSTICK_CSR) & TICK_FLAG)
-    {
-      asm!("wfi");
-    }
-  }
 }
 
 //**********************************************************
