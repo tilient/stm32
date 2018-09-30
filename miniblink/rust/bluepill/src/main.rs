@@ -17,10 +17,27 @@ arm-none-eabi-objcopy -Obinary \
 pub extern "C" fn main() {
   init_gpio();
   loop {
+    wave_test();
+    sleep(1000);
+  }
+}
+
+fn test() {
+  for _ in 0 .. 5 {
     set_port(13);
     sleep(20);
     clear_port(13);
-    sleep(980);
+    sleep(180);
+  }
+}
+
+fn wave_test() {
+  const MAX : u32 = 25;
+  for on_time in (1 .. MAX).chain((1 .. MAX).rev()) {
+    set_port(13);
+    sleep(on_time);
+    clear_port(13);
+    sleep(MAX - on_time);
   }
 }
 
