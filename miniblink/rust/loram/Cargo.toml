@@ -1,0 +1,19 @@
+[package]
+authors = ["wiffel"]
+edition = "2018"
+name = "blink"
+version = "0.1.0"
+
+[dependencies]
+cortex-m = "0.5.7"
+cortex-m-rt = "0.6.3"
+panic-halt = "0.2.0"
+embedded-hal = "0.2.1"
+embedded-graphics = "0.4.0"
+ssd1306 = "*"
+
+[dependencies.stm32f103xx-hal]
+features = ["rt"]
+git = "https://github.com/ilya-epifanov/stm32f103xx-hal.git"
+rev = "3a8d64d3605b5eac9fd15eea0ba25319fbb8375c"
+version = "*"
