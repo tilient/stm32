@@ -12,6 +12,7 @@
 rustflags = [
   # LLD (shipped with the Rust toolchain) is used as the default linker
   "-C", "link-arg=-Tlink.x",
+  "-C", "opt-level=z",
 
   # if you run into problems with LLD switch to the GNU linker by commenting out
   # this line
@@ -31,3 +32,4 @@ rustflags = [
 target = "thumbv7m-none-eabi"    # Cortex-M3
 # target = "thumbv7em-none-eabi"   # Cortex-M4 and Cortex-M7 (no FPU)
 # target = "thumbv7em-none-eabihf" # Cortex-M4F and Cortex-M7F (with FPU)
+
