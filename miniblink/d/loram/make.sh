@@ -11,7 +11,7 @@
 #   https://github.com/ldc-developers/ldc
 ##################################################
 
-LINK_OBJS="main.o api.o"
+LINK_OBJS="main.o api.o images.o"
 
 LIBOPENCM3="$HOME/dev/hardware/stm32"
 LIBOPENCM3+="/libopencm3-examples/libopencm3/lib"
@@ -36,10 +36,12 @@ rm -f api.{elf,map,o,s,bin}
 
 ldc2 $LDC2_FLAGS main.d
 ldc2 $LDC2_FLAGS api.d
+ldc2 $LDC2_FLAGS images.d
 arm-none-eabi-gcc $LINK_FLAGS -o main.elf
 arm-none-eabi-objcopy -Obinary main.elf main.bin
 
-#rm -f main.{elf,map,o}
-#rm -f api.{elf,map,o,s,bin}
+rm -f main.{elf,map,o}
+rm -f api.{elf,map,o}
+rm -f images.{elf,map,o}
 
 # dfu-util.exe -v -D main.bin
