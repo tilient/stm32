@@ -19,6 +19,7 @@ use stm32f103xx_hal::delay::Delay;
 use stm32f103xx_hal::stm32f103xx::Peripherals;
 use embedded_graphics::prelude::*;
 use embedded_graphics::image::Image1BPP;
+use embedded_graphics::pixelcolor::PixelColorU8;
 use embedded_graphics::fonts::Font12x16;
 use ssd1306::prelude::*;
 use ssd1306::Builder;
@@ -52,16 +53,30 @@ fn main() -> ! {
   let im = Image1BPP::new(include_bytes!("./rust.raw"), 64, 64)
              .translate(Coord::new(64, 0));
   loop {
-    disp.clear();
-    disp.draw(im.into_iter());
-    disp.flush().unwrap();
-
-    render_str(&mut disp, &mut delay,  0, "Hello");
-    render_str(&mut disp, &mut delay, 16, "world");
-    render_str(&mut disp, &mut delay, 32, "from");
-    render_str(&mut disp, &mut delay, 48, "Wiffel");
-
+    render_background(&mut disp, &im);
+    render_strings(&mut disp, &mut delay,
+                   &["Hello", "world", "from", "Wiffel"]);
     delay.delay_ms(1000_u16);
+  }
+}
+
+fn render_background<T>(disp: &mut GraphicsMode<T>,
+                        im: &Image1BPP<PixelColorU8>)
+where T: ssd1306::interface::DisplayInterface
+{
+  disp.clear();
+  disp.draw(im.into_iter());
+  disp.flush().unwrap();
+}
+
+fn render_strings<T>(disp: &mut GraphicsMode<T>,
+                     delay: &mut Delay, strs: &[&str])
+where T: ssd1306::interface::DisplayInterface
+{
+  let mut y = 0;
+  for chars in strs {
+    render_str(disp, delay, y, chars);
+    y += 16;
   }
 }
 
@@ -75,7 +90,7 @@ where T: ssd1306::interface::DisplayInterface
                 .translate(Coord::new(0, y))
                 .into_iter());
     disp.flush().unwrap();
-    delay.delay_ms(200_u16);
+    delay.delay_ms(50_u16);
   }
 }
 

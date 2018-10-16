@@ -1,6 +1,9 @@
+*.o
+*.elf
+*.map
+*.bin
 **/*.rs.bk
 .#*
 .gdb_history
 Cargo.lock
 target/
-blink.bin
