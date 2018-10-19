@@ -38,6 +38,7 @@ ldc2 $LDC2_FLAGS main.d
 ldc2 $LDC2_FLAGS api.d
 ldc2 $LDC2_FLAGS images.d
 arm-none-eabi-gcc $LINK_FLAGS -o main.elf
+arm-none-eabi-size main.elf
 arm-none-eabi-objcopy -Obinary main.elf main.bin
 
 rm -f main.{elf,map,o}
